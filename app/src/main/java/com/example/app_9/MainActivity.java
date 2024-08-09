@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             recyclerView.setAdapter(personAdapter);
             String endpoint = enbpointEditText.getText().toString();
 
-            checkPersonDataEndpoint(endpoint);
+            checkDataEndpoint(endpoint, "Please enter person ID", () -> fetchPersonData(endpoint));
         });
 
         fetchPeople.setOnClickListener(view -> {
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             recyclerView.setAdapter(filmAdapter);
             String endpoint = enbpointEditText.getText().toString();
 
-            checkFilmDataEndpoint(endpoint);
+            checkDataEndpoint(endpoint, "Please enter film ID", () -> fetchFilmData(endpoint));
         });
 
         fetchFilms.setOnClickListener(view -> {
@@ -74,19 +74,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void checkFilmDataEndpoint(String endpoint) {
+    private void checkDataEndpoint(String endpoint, String errorMessage, Runnable fetchData) {
         if (!endpoint.isEmpty()) {
-            fetchFilmData(endpoint);
+            fetchData.run();
         } else {
-            Toast.makeText(MainActivity.this, "Please enter film ID", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void checkPersonDataEndpoint(String endpoint) {
-        if (!endpoint.isEmpty()) {
-            fetchPersonData(endpoint);
-        } else {
-            Toast.makeText(MainActivity.this, "Please enter person ID", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -111,11 +103,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private <T, R> void executeApiCallForList(Call<R> call, ArrayList<T> dataList, RecyclerView.Adapter<?> adapter, Function<R, List<T>> extractor) {
-        call.enqueue(new Callback<R>() {
+    private <T, U> void executeApiCallForList(Call<U> call, ArrayList<T> dataList, RecyclerView.Adapter<?> adapter, Function<U, List<T>> extractor) {
+        call.enqueue(new Callback<U>() {
             @SuppressLint("NotifyDataSetChanged")
             @Override
-            public void onResponse(@NonNull Call<R> call, @NonNull Response<R> response) {
+            public void onResponse(@NonNull Call<U> call, @NonNull Response<U> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     List<T> items = extractor.apply(response.body());
                     dataList.clear();
@@ -127,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(@NonNull Call<R> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<U> call, @NonNull Throwable t) {
                 Toast.makeText(MainActivity.this, t.toString(), Toast.LENGTH_SHORT).show();
             }
         });
